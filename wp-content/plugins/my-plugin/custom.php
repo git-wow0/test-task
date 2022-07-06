@@ -52,15 +52,47 @@ function deliver_mail() {
         $email   = sanitize_email( $_POST["cf-email"] );
         $subject = sanitize_text_field( $_POST["cf-subject"] );
         $message = esc_textarea( $_POST["cf-message"] );
-
         $to = get_option( 'admin_email' );
-
         $headers = "From: $first_name $last_name  <$email>" . "\r\n";
+
+        $arr = array(
+            'properties' => array(
+                array(
+                    'property' => 'email',
+                    'value' => $email
+                ),
+                array(
+                    'property' => 'firstname',
+                    'value' => $first_name
+                ),
+                array(
+                    'property' => 'lastname',
+                    'value' => $last_name
+                )
+            )
+        );
+
         if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
 
         if ( wp_mail( $to, $subject, $message, $headers ) ) {
 
             echo '<script>alert(\'Thanks for your message!\');</script>';
+            $post_json = json_encode($arr);
+            $hapikey = readline('eu1-f4a9-6500-4882-bb99-9e3392ab3c0a');
+            $endpoint = 'https://api.hubapi.com/contacts/v1/contact?hapikey=' . $hapikey;
+            $ch = @curl_init();
+            @curl_setopt($ch, CURLOPT_POST, true);
+            @curl_setopt($ch, CURLOPT_POSTFIELDS, $post_json);
+            @curl_setopt($ch, CURLOPT_URL, $endpoint);
+            @curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+            @curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = @curl_exec($ch);
+            $status_code = @curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curl_errors = curl_error($ch);
+            @curl_close($ch);
+            echo "curl Errors: " . $curl_errors;
+            echo "\nStatus code: " . $status_code;
+            echo "\nResponse: " . $response;
 
         }
     }
@@ -71,11 +103,11 @@ function deliver_mail() {
     }
 }
 
+
 function cf_shortcode() {
     ob_start();
     deliver_mail();
     html_form_code();
-
     return ob_get_clean();
 }
 
