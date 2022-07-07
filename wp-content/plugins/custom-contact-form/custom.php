@@ -8,40 +8,40 @@ Network: true
 Author: Shevchenko Liza
 Author URI: http://w3guy.com
 */
-$message_err=false;
-$subject_err=false;
-$email_err=false;
-function html_form_code() {
-    echo '<form action="' . esc_url( $_SERVER['REQUEST_URI'] ) . '" method="post">';
-    echo '<p>';
-    echo 'First Name <br/>';
-    echo '<input type="text" name="cf-name" pattern="[a-zA-Z ]+" value="' . ( isset( $_POST["cf-first_name"] ) ? esc_attr( $_POST["cf-name"] ) : '' ) . '" size="40" />';
-    echo '</p>';
 
-    echo '<p>';
-    echo 'Last Name <br/>';
-    echo '<input type="text" name="cf-name" pattern="[a-zA-Z ]+" value="' . ( isset( $_POST["cf-last_name"] ) ? esc_attr( $_POST["cf-name"] ) : '' ) . '" size="40" />';
-    echo '</p>';
+function html_form_code() {?>
+    <form action="<?=esc_url( $_SERVER['REQUEST_URI'] ) ?>" method="post">
+        <p>
+            <label for="cf-first_name"><?esc_html_e('First Name', 'test_task')?></label> </br>
+            <input type="text" name="cf-first_name" pattern="[a-zA-Z ]+" value="<?= ( isset( $_POST["cf-first_name"] ) ? esc_attr( $_POST["cf-first_name"] ) : '' )?>" size="40" />
+        </p>
 
-    echo '<p>';
-    echo 'Subject <br/>';
-    echo '<input type="text" name="cf-subject" pattern="[a-zA-Z0-9 ]+" value="' . ( isset( $_POST["cf-subject"] ) ? esc_attr( $_POST["cf-subject"] ) : '' ) . '" size="40" />';
-    echo '</p>';
+        <p>
+            <label for="cf-last_name"><?esc_html_e('Last Name', 'test_task')?></label> </br>
+            <input type="text" name="cf-last_name" pattern="[a-zA-Z ]+" value="<?=( isset( $_POST["cf-last_name"] ) ? esc_attr( $_POST["cf-last_name"] ) : '' ) ?>" size="40" />
+        </p>
 
-    echo '<p>';
-    echo 'Message <br/>';
-    echo '<textarea rows="10" cols="35" name="cf-message">' . ( isset( $_POST["cf-message"] ) ? esc_attr( $_POST["cf-message"] ) : '' ) . '</textarea>';
-    echo '</p>';
+        <p>
+            <label for="cf-subject"><?esc_html_e('Subject', 'test_task')?></label> </br>
+            <input type="text" name="cf-subject" pattern="[a-zA-Z0-9 ]+" value="<?= (isset( $_POST["cf-subject"] ) ? esc_attr( $_POST["cf-subject"] ) : '')?>" size="40" />
+        </p>
 
-    echo '<p>';
-    echo 'Email <br/>';
-    echo '<input type="email" name="cf-email" value="' . ( isset( $_POST["cf-email"] ) ? esc_attr( $_POST["cf-email"] ) : '' ) . '" size="40" />';
-    echo '</p>';
+        <p>
+            <label for="cf-message"><?esc_html_e('Message', 'test_task')?></label> </br>
+            <textarea rows="10" cols="35" name="cf-message"> <?= (isset( $_POST["cf-message"] ) ? esc_attr( $_POST["cf-message"] ) : '')?> </textarea>
+        </p>
 
-    echo '<p><input type="submit" class="btn" name="cf-submitted" value="Send"></p>';
-    echo '</form>';
+        <p>
+            <label for="cf-message"><?esc_html_e('Email', 'test_task')?></label> </br>
+            <input type="email" name="cf-email" value=" <?= (isset( $_POST["cf-email"] ) ? esc_attr( $_POST["cf-email"] ) : '')?> " size="40"/>
+        </p>
 
-}
+        <p>
+            <input type="submit" class="btn" name="cf-submitted" value="Send">
+        </p>
+    </form>
+
+<? }
 
 function deliver_mail() {
 
@@ -72,6 +72,21 @@ function deliver_mail() {
             )
         );
 
+        define('DEFAULT_SITE_DIR', $_SERVER['DOCUMENT_ROOT']."/task/wp-content/log/log.txt");
+
+        function logger ($log)
+        {
+            if(!file_exists(DEFAULT_SITE_DIR)) {
+                file_put_contents(DEFAULT_SITE_DIR, '');
+            }
+
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $date = date("j-M-Y H:i:s");
+            $contents = file_get_contents(DEFAULT_SITE_DIR);
+            $contents .= "$ip\t$date\t$log\r";
+            file_put_contents(DEFAULT_SITE_DIR, $contents);
+
+        }
         if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
 
         if ( wp_mail( $to, $subject, $message, $headers ) ) {
@@ -94,7 +109,10 @@ function deliver_mail() {
             echo "\nStatus code: " . $status_code;
             echo "\nResponse: " . $response;
 
+
         }
+            $log="Form sent from $email";
+            logger($log);
     }
         else{
             echo '<script>alert(\'Invalid email format!\');</script>';
